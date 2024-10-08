@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Interface</title>
+    <style>                                                                                  
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #ffe6f2; 
+            color: #cc0066; 
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: #fff0f5; 
+            border-radius: 20px;
+            border: 2px solid #ff66b2; 
+            padding: 20px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            width: 60%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #ff66b2;
+            font-family: 'Cursive', sans-serif;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin: 20px auto;
+            border-radius: 10px;
+            padding: 10px;
+            width: 60%;
+            background-color: #ffe6f2;
+            border: 1px solid #ff66b2;
+            color: #cc0066; /* Teks warna pink */
+        }
+
+        button {
+            background-color: #ff66b2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e60073;
+        }
+
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+
+        table, th, td {
+            border: 1px solid #ff66b2;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sertakan pustaka xlsx untuk membaca file Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <div class="container">
+        <h1>Upload File (Excel/CSV)</h1>
+
+        <input type="file" id="fileInput" />
+        <button onclick="uploadFile()">Upload</button>
+
+        <div id="output"></div>
+
+        <table id="fileTable" style="display:none;">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const outputDiv = document.getElementById("output");
+            const table = document.getElementById("fileTable");
+
+            outputDiv.innerHTML = "";
+            table.style.display = "none";
+            table.querySelector("thead").innerHTML = "";
+            table.querySelector("tbody").innerHTML = "";
+
+            if (!file) {
+                outputDiv.innerHTML = "<p class='error'>Tidak ada file yang dipilih.</p>";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    console.log("Mencoba membaca sebagai file Excel...");
+                    
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    console.log("Workbook berhasil dibaca:", workbook);
+                    const sheetName = workbook.SheetNames[0]; // Baca sheet pertama
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    displayExcelData(jsonData);
+                } catch (error) {
+                    console.error("Kesalahan saat memproses sebagai Excel:", error);
+                
+                    try {
+                        console.log("Mencoba membaca sebagai file CSV...");
+                        const csvData = new TextDecoder().decode(event.target.result);
+                        displayCSVData(csvData);
+                    } catch (csvError) {
+                        outputDiv.innerHTML = "<p class='error'>Terjadi kesalahan saat memproses file. Silakan coba lagi.</p>";
+                        console.error("Kesalahan saat memproses sebagai CSV:", csvError);
+                    }
+                }
+            };
+            reader.onerror = function() {
+                outputDiv.innerHTML = "<p class='error'>Terjadi kesalahan saat membaca file. Silakan coba lagi.</p>";
+                console.error("Kesalahan saat membaca file:", reader.error);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function displayCSVData(csvData) {
+            const rows = csvData.split("\n").map(row => row.split(","));
+            const table = document.getElementById("fileTable");
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+
+            const headers = rows[0];
+            let headerRow = "<tr>";
+            headers.forEach(header => {
+                headerRow += `<th>${header}</th>`;
+            });
+            headerRow += "</tr>";
+            thead.innerHTML = headerRow;
+
+            rows.slice(1).forEach(row => {
+                let rowHTML = "<tr>";
+                row.forEach(cell => {
+                    rowHTML += `<td>${cell}</td>`;
+                });
+                rowHTML += "</tr>";
+                tbody.innerHTML += rowHTML;
+            });
+
+            table.style.display = "table";
+        }
+
+        function displayExcelData(data) {
+            const table = document.getElementById("fileTable");
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+
+            let headerRow = "<tr>";
+            data[0].forEach(header => {
+                headerRow += `<th>${header}</th>`;
+            });
+            headerRow += "</tr>";
+            thead.innerHTML = headerRow;
+
+            data.slice(1).forEach(row => {
+                let rowHTML = "<tr>";
+                row.forEach(cell => {
+                    rowHTML += `<td>${cell !== undefined ? cell : ''}</td>`;
+                });
+                rowHTML += "</tr>";
+                tbody.innerHTML += rowHTML;
+            });
+
+            // Tampilkan tabel
+            table.style.display = "table";
+        }
+    </script>
+
+</body>
+</html>
