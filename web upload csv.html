@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload CSV File</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffc0cb; 
+            color: #ffffff; 
+            padding: 20px;
+            text-align: center; 
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff; 
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            color: #000000; 
+        }
+        h1 {
+            color: #ff69b4; 
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow-x: auto;
+            display: block;
+        }
+        table, th, td {
+            border: 1px solid #ff69b4; 
+        }
+        th, td {
+            padding: 12px;
+            text-align: center; 
+        }
+        th {
+            background-color: #ff1493; 
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #ffe4e1; 
+        }
+        tr:nth-child(odd) {
+            background-color: #ffb6c1; 
+        }
+        input[type="file"] {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ff69b4; 
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ffffff; 
+            color: #ff69b4; 
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #ff69b4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload CSV File</h1>
+        <p>
+            Created by <br>
+            Bunga Amanda Aurora - 164231098 <br>
+            
+        </p>
+        <input type="file" id="csvFileInput" accept=".csv" />
+        <div class="table-container">
+            <table id="table">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 Symantec Inc. All rights reserved.
+    </footer>
+
+    <script>
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    parseCSV(text);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function parseCSV(text) {
+            const rows = text.split('\n').map(row => row.split(','));
+            
+            // Get the header values
+            const header = rows[0];
+            const tableHeader = document.getElementById('tableHeader');
+            tableHeader.innerHTML = '';
+            header.forEach(col => {
+                const th = document.createElement('th');
+                th.innerText = col.trim();
+                tableHeader.appendChild(th);
+            });
+            
+            // Get the body values
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            rows.slice(1).forEach(row => {
+                if (row.length === header.length) {
+                    const tr = document.createElement('tr');
+                    row.forEach(cell => {
+                        const td = document.createElement('td');
+                        td.innerText = cell.trim();
+                        tr.appendChild(td);
+                    });
+                    tableBody.appendChild(tr);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
